@@ -1,0 +1,6 @@
+{
+  "name": "OLYMPUS — Çok Ajanlı Yatırım Sinyal Sistemi",
+  "description": "Orta vadeli (swing) çok ajanlı kripto, hisse senedi ve emtia sinyal ve karar destek motoru.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,232 @@
+export type AssetType = 'crypto' | 'us_stock' | 'bist' | 'commodity';
+
+export type SignalDirection = 'LONG' | 'SHORT';
+
+export type SignalStatus = 'PENDING' | 'ACTIVE' | 'HIT_T1' | 'HIT_T2' | 'HIT_T3' | 'INVALIDATED' | 'CLOSED';
+
+export interface Candle {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface HistoricalMatch {
+  date: string;
+  symbol: string;
+  similarityScore: number;
+  outcome: 'WIN_T2' | 'WIN_T3' | 'STOPPED' | 'BREAKEVEN';
+  profitPercent: number;
+  barsHeld: number;
+}
+
+export interface HistoricalSimilarityResult {
+  totalAnalyzed: number;
+  similarSetupsFound: number;
+  bullishOutcomes: number;
+  bearishOutcomes: number;
+  winRatioText: string;
+  averageReturn: number;
+  matches: HistoricalMatch[];
+  summaryNote: string;
+}
+
+export interface QuantProof {
+  rsiDivergenceProof: {
+    pivot1: { price: number; rsi: number; timeStr: string };
+    pivot2: { price: number; rsi: number; timeStr: string };
+    rsiDelta: number;
+    divergenceType: string;
+  };
+  structureBreakProof: {
+    brokenSwingLevel: number;
+    breakCandleClose: number;
+    breakCandleTimeStr: string;
+    penetrationPercent: number;
+    isBodyClose: boolean;
+  };
+  liquiditySweepProof: {
+    sweptLevel: number;
+    wickPrice: number;
+    candleClose: number;
+    sweepCandleTimeStr: string;
+    sweepDelta: number;
+  };
+  fvgZoneProof: {
+    candle1High: number;
+    candle3Low: number;
+    fvgTop: number;
+    fvgBottom: number;
+    gapSpreadPercent: number;
+    entryRange: [number, number];
+  };
+  mtfProof: {
+    weeklyTrend: string;
+    dailyTrend: string;
+    h4Trend: string;
+    h1TriggerState: string;
+  };
+  lastClosedCandleTime: string;
+}
+
+export interface MacroSnapshot {
+  timestamp: number;
+  dxy: { value: number; change24h: number; trend: 'BULLISH' | 'BEARISH' | 'RANGE'; source: string };
+  usdtD: { value: number; change24h: number; trend: 'BULLISH' | 'BEARISH' | 'RANGE'; source: string };
+  btcD: { value: number; change24h: number; trend: 'BULLISH' | 'BEARISH' | 'RANGE'; source: string };
+  vix: { value: number; change24h: number; status: 'ELEVATED' | 'NORMAL' | 'LOW'; source: string };
+  us10y: { value: number; change24h: number; trend: 'RISING' | 'FALLING' | 'STABLE'; source: string };
+  lastUpdatedIso: string;
+  summaryEvaluation: string;
+}
+
+export interface FundamentalVetoResult {
+  vetoed: boolean;
+  reason?: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  eventsFound: string[];
+  suggestedSizeAdjustment: number;
+}
+
+export interface SignalOpportunity {
+  id: string;
+  symbol: string;
+  name: string;
+  assetType: AssetType;
+  direction: SignalDirection;
+  entryZone: {
+    min: number;
+    max: number;
+    currentPrice: number;
+  };
+  invalidationLevel: number;
+  targets: {
+    t1: { price: number; percentage: number; rr: number; allocation: number };
+    t2: { price: number; percentage: number; rr: number; allocation: number };
+    t3: { price: number; percentage: number; rr: number; allocation: number };
+  };
+  overallScore: number;
+  confidenceLabel: 'YÜKSEK KALİTE (A+)' | 'STANDART KURULUM (A)' | 'DİKKATLİ / KARŞI TREND (B)';
+  clusterThemeId?: string;
+  relativeStrengthRank?: number;
+  
+  mandatoryCriteriaMet: {
+    rsiDivergenceOrTrendbreak: boolean;
+    bodyStructureBreak: boolean;
+    liquiditySweep: boolean;
+    fvgZoneConfirmed: boolean;
+    mtfHierarchyAligned: boolean;
+  };
+  
+  quantDetails: {
+    h4Rsi: number;
+    divergenceType: string;
+    sweepLevel: number;
+    chochLevel: number;
+    fvgRange: [number, number];
+    volumeSurgeRatio: number;
+    ema21: number;
+    ema50: number;
+  };
+  macroConfirmation: {
+    confirmed: boolean;
+    note: string;
+    warningFlag: boolean;
+  };
+  fundamentalVeto: FundamentalVetoResult;
+  historicalSimilarity: HistoricalSimilarityResult;
+  
+  executiveSummaryTr: string;
+  orchestratorSynthesis: string;
+  quantProof?: QuantProof;
+
+  createdAt: number;
+  closedAt?: number;
+  status: SignalStatus;
+  currentReturn?: number;
+}
+
+export interface AssetCluster {
+  id: string;
+  themeName: string;
+  description: string;
+  assetType: AssetType;
+  averageCorrelation: number;
+  leaderAsset: string;
+  leaderScore: number;
+  topOpportunities: SignalOpportunity[];
+  weakerCorrelatedSymbols: { symbol: string; reason: string; score: number }[];
+}
+
+export interface EliminatedAssetRecord {
+  symbol: string;
+  name: string;
+  assetType: AssetType;
+  stage: 'VOLUME_THRESHOLD' | 'MTF_MISMATCH' | 'MANDATORY_CRITERIA_UNMET' | 'FUNDAMENTAL_VETO';
+  stageTitle: string;
+  exactReason: string;
+  metrics: {
+    rsi?: number;
+    volumeSurge?: number;
+    structureBroken?: boolean;
+    sweepDetected?: boolean;
+  };
+}
+
+export interface FunnelStatistics {
+  totalAssetsScreened: number;
+  droppedAtVolumeThreshold: number;
+  droppedAtMtfMismatch: number;
+  droppedAtMissingMandatoryCriteria: number;
+  droppedAtFundamentalVeto: number;
+  qualifiedOpportunitiesCount: number;
+  clusteredThemesCount: number;
+  eliminatedAssets?: EliminatedAssetRecord[];
+}
+
+export interface TrackedPerformance {
+  totalHistoricalSignals: number;
+  activeSignalsCount: number;
+  closedSignalsCount: number;
+  winCount: number;
+  lossCount: number;
+  actualWinRatePercent: number;
+  profitFactor: number;
+  averageRiskReward: number;
+  averageHoldDurationHours: number;
+  assetTypeBreakdown: {
+    crypto: { count: number; winRate: number };
+    us_stock: { count: number; winRate: number };
+    bist: { count: number; winRate: number };
+    commodity: { count: number; winRate: number };
+  };
+}
+
+export interface SocialIntelligenceItem {
+  id: string;
+  analyst: string;
+  handle: string;
+  avatar: string;
+  trackRecordScore: number;
+  threeMonthWinRate: number;
+  recommendedAsset: string;
+  direction: SignalDirection;
+  targetPrice: number;
+  timestamp: string;
+  postSnippet: string;
+  systemEvaluated: boolean;
+  systemVerdict: 'APPROVED_QUALIFIED' | 'REJECTED_CRITERIA_UNMET' | 'UNDER_REVIEW';
+  verdictNote: string;
+}
+
+export interface ScanStreamEvent {
+  stepId: string;
+  agentName: string;
+  agentRole: string;
+  status: 'START' | 'PROGRESS' | 'DATA' | 'VETO' | 'SUCCESS' | 'COMPLETE' | 'ERROR';
+  message: string;
+  timestamp: string;
+  dataPayload?: any;
+}
